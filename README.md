@@ -132,4 +132,4 @@ type: 'custom:delijn-card'
 
 ## Credits
 
-Thanks to [cgtobi's rmv-card](https://github.com/cgtobi/rmv-card) and [Ian Richardson's list-card](https://github.com/custom-cards/list-card) for all the initial work and inspiration.
+Thanks to [cgtobi's rmv-card](https://github.com/cgtobi/rmv-card), [Ian Richardson's list-card](https://github.com/custom-cards/list-card),[bollewolle's delijn-card](https://github.com/bollewolle/delijn-card), and [Helldog136's stib-mvib-card](https://github.com/helldog136/stib-mvib-card) for all the initial work and inspiration.
