@@ -1,5 +1,5 @@
-class DeLijnCard extends HTMLElement {
-  
+class STIBMIVBCard extends HTMLElement {
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -9,19 +9,38 @@ class DeLijnCard extends HTMLElement {
     return "&nbsp;";  // HTML non-braking space
   }
 
-  static get SEC() {
-    return "&#8217;";  // HTML single right quote to indicate seconds
+  static get MIN() {
+    return "&#8217;";  // HTML single right quote to indicate minutes
+  }
+
+  NoMessageException() {
+    this.name = 'NoMessageException';
   }
   
+  filterMessages(next_passages) {
+    var messages = {};
+    var message_list = [];
+    for (const passage of next_passages) {
+        for (const message of passage['messages']) {
+	   messages[passage['line_number']] = [message, passage['line_color'], passage['line_text_color']];
+	}
+    }
+    for (const [ key, value ] of Object.entries(messages)) {
+       message_list.push({'line_number': key, 'message': value[0], 'line_color': value[1], 'line_text_color': value[2]});
+    }
+    return message_list;    
+  }
+
+
   setConfig(config) {
     if (!config.entity) {
       throw new Error('Please define an entity');
     }
-    
+
     const root = this.shadowRoot;
     if (root.lastChild)
       root.removeChild(root.lastChild);
-    
+
     const cardConfig = Object.assign({}, config);
     const card = document.createElement('ha-card');
     const content = document.createElement('div');
@@ -64,7 +83,7 @@ class DeLijnCard extends HTMLElement {
         line-height:1.6em
       }
     `;
-    
+
     content.id = "container";
     cardConfig.title ? card.header = cardConfig.title : null;
     card.appendChild(content);
@@ -78,15 +97,19 @@ class DeLijnCard extends HTMLElement {
     const root = this.shadowRoot;
     const card = root.lastChild;
     this.style.display = 'block';
-    
+
     const entityState = hass.states[config.entity];
     const config_type = config.config_type;
     // set of default columns
-    var columns = [{'field': 'line_number_public', 'title': 'Line'},
-                   {'field': 'line_transport_type', 'title': 'Type'},
-                   {'field': 'final_destination', 'title': 'Towards'},
-                   {'field': 'due_in_min', 'title': 'Due in (min)'}];
-    
+
+  var columns = [{'field': 'line_number', 'title': 'Line'},
+             {'field': 'line_type', 'title': 'Type'},
+             {'field': 'next_passing_destination', 'title': 'Towards'},
+             {'field': 'waiting_time', 'title': 'Due in (min)'}];
+
+  var message_columns = [{'field': 'line_number', 'title': 'Line'},
+             {'field': 'message', 'title': 'Message'}];
+
     if (config_type == "columns") {
       columns = config.columns;
     }
@@ -100,20 +123,27 @@ class DeLijnCard extends HTMLElement {
         console.warn('No columns: ' + warning);
       }
     }
-    
+
     const tableHeader = this.createTableHeader(columns);
     let tableBody = `<tr><td colspan="${columns.length}"><i>No passages</i></td></tr>`;
-    
+
     try {
       tableBody = this.createTableBody(entityState.attributes.next_passages, columns);
     }
     catch(warning) {
       console.warn('No passages: ' + warning);
     }
-    
+    const messageTableHeader = this.createTableHeader(message_columns);
     let card_content = "<table>" + tableHeader + tableBody + "</table>";
+
+    let messages = this.filterMessages(entityState.attributes.next_passages);
+    if (messages.length != 0) {
+      let messageTableBody = this.createTableBody(messages, message_columns);
+      card_content += "<table>" + messageTableHeader + messageTableBody + "</table>";
+    }
+
     root.lastChild.hass = hass;
-    
+
     root.getElementById('container').innerHTML = card_content;
   }
 
@@ -128,7 +158,7 @@ class DeLijnCard extends HTMLElement {
       return html + `<th>${column.title}</th>`;
     }, headerPrefix) + headerSuffix;
   }
-  
+
   getRawColumns(passageEntry) {
     return Object.keys(passageEntry).map(function(key){
       return {'field': key, 'title': key.split('_').map(function(word) {
@@ -137,42 +167,43 @@ class DeLijnCard extends HTMLElement {
     });
   }
 
+  formatMessageCell(field, passage) {
+    let cell = "";
+  }
+
   formatCell(field, passage) {
     let cell = "";
-    // show proper line number format of De Lijn for the line_number_public
-    if (field == 'line_number_public') {
-      const bordercol = '#' + passage.line_number_colourBackBorderHex;
-      const backcol   = '#' + passage.line_number_colourBackHex;
-      const color     = '#' + passage.line_number_colourFrontHex;
+    // show proper line number format of STIB for the line_number_public
+    if (field == 'line_number') {
+      //const bordercol = passage.line_color;
+      const backcol   = `#${passage.line_color}`;
+      const bordercol   = `#${passage.line_color}`;
+      const color     = `#${passage.line_text_color}`;
       cell = `<td class="line-number" style="border-color: ${bordercol}; background-color: ${backcol}; color: ${color};">${passage[field]}</td>`;
     }
-    else if (field == 'line_transport_type') {
-      // ideally we show icons here for the different types (not yet implemented)
-      cell = `<td class="${field}">${passage[field]}</td>`;
+    else if (field == 'line_type') {
+      // show icons for the different types
+      cell = `<td class="${field}"><ha-icon icon="mdi:${passage[field]}"></ha-icon></td>`;
     }
-    else if (field == 'due_at_schedule' || field == 'due_at_realtime') {
-      cell = `<td class="${field}">`;
-      if (passage[field] !== null) {
-        // change string to correct datetime with timezone offset
-        var dt = new Date(passage[field]);
-        // only retrieve the hh:mm and not the seconds (which are almost always 00)
-        cell += dt.toLocaleTimeString().replace(/([\d]+:[\d]{2})(:[\d]{2})/, "$1");
+    else if (field == 'waiting_time') {
+      if (passage[field]) {
+        cell = `<td class="${field}">${passage[field]}${STIBMIVBCard.SP}${STIBMIVBCard.MIN}</td>`;
       }
-      cell += '</td>';
+      else if (passage['next_passing_message']) {
+        cell = `<td class="${field}">${passage['next_passing_message']}</td>`;
+      }
     }
-    else if (field == 'due_in_min') {
-      cell = `<td class="${field}">${passage[field]}${DeLijnCard.SP}${DeLijnCard.SEC}</td>`;
-    }
-    else if (field == 'delay_in_min') {
-      // calculate the delay in min from difference between realtime and schedule
-      let dueAtSchedule = new Date(passage.due_at_schedule);
-      let dueAtRealTime = new Date(passage.due_at_realtime);
-      let delay = Math.round((dueAtRealTime - dueAtSchedule)/(1000*60), 0);
-      cell = `<td class="${field}">${delay}${DeLijnCard.SP}${DeLijnCard.SEC}</td>`;
+    else if (field == 'next_passing_destination') {
+      if (passage[field]) {
+        cell = `<td class="${field}">${passage[field]}</td>`;
+      }
+      else {
+        cell = `<td class="${field}">${passage['line_name']}</td>`;
+      }
     }
     else {
       cell = `<td class="${field}">${passage[field]}</td>`;
-    }
+   }
     return cell;
   }
 
@@ -188,6 +219,19 @@ class DeLijnCard extends HTMLElement {
     }.bind(this), tableBodyPrefix) + tableBodySuffix;
   }
 
+  createMessageTableBody(passages, columns) {
+    const tableBodyPrefix = '<tbody>';
+    const tableBodySuffix = '</tbody>';
+    return passages.reduce(function (htmlTableRows, passage) {
+      const rowPrefix = '<tr>';
+      const rowSuffix = '</tr>';
+      return htmlTableRows + columns.reduce(function (htmlTableCells, column) {
+        return htmlTableCells + this.formatMessageCell(column.field, passage);
+      }.bind(this), rowPrefix) + rowSuffix;
+    }.bind(this), tableBodyPrefix) + tableBodySuffix;
+  }
+
 }
 
-customElements.define('delijn-card', DeLijnCard);
+
+customElements.define('stib-mivb-card', STIBMIVBCard)
