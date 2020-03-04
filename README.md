@@ -2,7 +2,7 @@
 
 This card generates a passages card for the De Lijn public transport service in Flanders (Belgium).
 
-![example](example.png)
+![example](Troon_line_6_and_2.png)
 
 ## Options
 
@@ -82,7 +82,7 @@ type: 'custom:delijn-card'
 
 ```
 
-![example](example.png)
+![example](Reniers_line_83_omgeleid.png)
 
 Example with a custom layout in the `ui-lovelace.yaml`. In this case also the scheduled and real-time times are shown:
 ```yaml
@@ -127,7 +127,7 @@ title: 'Brugsepoort, Gent'
 type: 'custom:delijn-card'
 
 ```
-![example](example2.png)
+![example](Troon_line_12_27.png)
 
 
 ## Credits
