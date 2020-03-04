@@ -186,7 +186,7 @@ class STIBMIVBCard extends HTMLElement {
       cell = `<td class="${field}"><ha-icon icon="mdi:${passage[field]}"></ha-icon></td>`;
     }
     else if (field == 'waiting_time') {
-      if (passage[field]) {
+      if (passage[field] != null) {
         cell = `<td class="${field}">${passage[field]}${STIBMIVBCard.SP}${STIBMIVBCard.MIN}</td>`;
       }
       else if (passage['next_passing_message']) {
