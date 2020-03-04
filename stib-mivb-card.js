@@ -16,7 +16,7 @@ class STIBMIVBCard extends HTMLElement {
   NoMessageException() {
     this.name = 'NoMessageException';
   }
-  
+
   filterMessages(next_passages) {
     var messages = {};
     var message_list = [];
@@ -28,7 +28,7 @@ class STIBMIVBCard extends HTMLElement {
     for (const [ key, value ] of Object.entries(messages)) {
        message_list.push({'line_number': key, 'message': value[0], 'line_color': value[1], 'line_text_color': value[2]});
     }
-    return message_list;    
+    return message_list;
   }
 
 
