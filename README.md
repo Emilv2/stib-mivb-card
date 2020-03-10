@@ -1,6 +1,6 @@
 # Stib-Mivb
 
-This card generates a passages card for the De Lijn public transport service in Flanders (Belgium).
+This card generates a passages card for the MIVB-STIB public transport service in Brussels (Belgium).
 
 ![example](Troon_line_6_and_2.png)
 
