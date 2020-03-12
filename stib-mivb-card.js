@@ -129,6 +129,11 @@ class STIBMIVBCard extends HTMLElement {
 
     try {
       tableBody = this.createTableBody(entityState.attributes.next_passages, columns);
+      let messages = this.filterMessages(entityState.attributes.next_passages);
+      if (messages.length != 0) {
+        let messageTableBody = this.createTableBody(messages, message_columns);
+        card_content += "<table>" + messageTableHeader + messageTableBody + "</table>";
+      }
     }
     catch(warning) {
       console.warn('No passages: ' + warning);
@@ -136,11 +141,6 @@ class STIBMIVBCard extends HTMLElement {
     const messageTableHeader = this.createTableHeader(message_columns);
     let card_content = "<table>" + tableHeader + tableBody + "</table>";
 
-    let messages = this.filterMessages(entityState.attributes.next_passages);
-    if (messages.length != 0) {
-      let messageTableBody = this.createTableBody(messages, message_columns);
-      card_content += "<table>" + messageTableHeader + messageTableBody + "</table>";
-    }
 
     root.lastChild.hass = hass;
 
