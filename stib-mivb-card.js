@@ -13,10 +13,6 @@ class STIBMIVBCard extends HTMLElement {
     return "&#8217;";  // HTML single right quote to indicate minutes
   }
 
-  NoMessageException() {
-    this.name = 'NoMessageException';
-  }
-
   filterMessages(next_passages) {
     var messages = {};
     var message_list = [];
